@@ -33,6 +33,7 @@ service.interceptors.response.use(
   },
   error => {
     // 兼容blob下载出错json提示
+    console.log('请求出错')
     if (error.response.data instanceof Blob && error.response.data.type.toLowerCase().indexOf('json') !== -1) {
       const reader = new FileReader()
       reader.readAsText(error.response.data, 'utf-8')

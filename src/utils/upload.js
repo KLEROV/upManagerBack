@@ -3,7 +3,7 @@ import { getToken } from '@/utils/auth'
 
 export function upload(api, file) {
   var data = new FormData()
-  data.append('file', file)
+  data.append('multipartFile', file)
   const config = {
     headers: { 'Authorization': getToken() }
   }

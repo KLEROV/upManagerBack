@@ -417,6 +417,9 @@ function CRUD(options) {
     resetDataStatus() {
       const dataStatus = {}
       function resetStatus(datas) {
+         if(datas==undefined){
+            return false;
+         }
         datas.forEach(e => {
           dataStatus[crud.getDataId(e)] = {
             delete: 0,
@@ -435,6 +438,7 @@ function CRUD(options) {
      * @param {Number | String} id 数据项id
      */
     getDataStatus(id) {
+        
       return crud.dataStatus[id]
     },
     /**
@@ -443,6 +447,7 @@ function CRUD(options) {
      */
     selectAllChange(selection) {
       // 如果选中的数目与请求到的数目相同就选中子节点，否则就清空选中
+     
       if (selection && selection.length === crud.data.length) {
         selection.forEach(val => {
           crud.selectChange(selection, val)
