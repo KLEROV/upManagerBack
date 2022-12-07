@@ -2,8 +2,7 @@ import request from '@/utils/request'
 
 export function get() {
   return request({
-    url: 'api/upOperation/queryUpVideo/',
-    // url: '/api/logs/errorr/',
+    url: 'api/upOperation/queryUpVideo',
     method: 'get',
   })
 }
