@@ -14,7 +14,7 @@
               @keyup.enter.native="crud.toQuery"
             />
             <el-input
-              v-model="query.upId"
+              v-model="query.name"
               clearable
               size="small"
               placeholder="视频名称"

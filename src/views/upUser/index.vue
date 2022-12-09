@@ -34,7 +34,10 @@
             <rrOperation />
           </div>
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
-            <crudOperation :permission="permission" />
+            <template>
+                <!-- <el-button  type="primary" size="small" @click='add'>查看</el-button> -->
+                <el-button  type="primary" size="medium" @click='add' :disabled='active==null'>新增</el-button>
+            </template>
             <!--表单组件-->
             
             <el-dialog :close-on-click-modal="false" :visible.sync="dialogModel" :title="dialogTitle" width="600px">
@@ -106,7 +109,7 @@
                         <el-tab-pane label="cl4" name="fourth">定时任务补偿</el-tab-pane>
                     </el-tabs> -->
                     <el-form-item label="upId" >
-                        <el-input v-model="dialogForm.upId" style="width: 370px" :disabled='dialogTitle=="编辑"'/>
+                        <el-input v-model="dialogForm.upId" style="width: 370px"/>
                     </el-form-item>
                     <el-form-item label="平台">
                         <el-select v-model="dialogForm.productLine" placeholder="请选择平台" @change='change'>
@@ -139,7 +142,7 @@
                 </div>
             </el-dialog>
             <!--表格渲染-->
-            <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
+            <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="selectionChangeHandler">
                 <el-table-column type="selection" width="55" />
                 <!-- <el-table-column prop="id" label="id"  width="55"/> -->
                 <el-table-column prop="upId" label="upId"  width="55"/>
@@ -224,7 +227,7 @@ export default {
         { key: 'CL03', display_name: 'CL03' },
         { key: 'CL04', display_name: 'CL04' },
       ],
-      activeName:'first',
+      active:null,
       dialogModel:false,
       dialogForm:{},
       dialogLoading:false,
@@ -242,10 +245,8 @@ export default {
       return true
     },
     [CRUD.HOOK.beforeToAdd]() {
-        this.dialogTitle='添加';
-        this.dialogModel=true;
-        this.dialogForm={};
-    //   return true
+        
+        //   return true
     },
     change(value){
         if(this.dialogTitle=='编辑'){
@@ -311,10 +312,24 @@ export default {
             this.dialogForm={};
             this.dialogModel=false;
             this.dialogLoading=false;
+            this.active=null;
         }).catch(err=>{
             this.$message.error(err);
             this.dialogLoading=false;
         })
+    },
+    selectionChangeHandler(val){
+        if(val&&val.length==1){
+            this.active=val[0];
+        }else{
+            this.active=null;
+        }
+    },
+    add(){
+        this.dialogTitle='添加';
+        this.dialogForm={};
+        this.dialogForm.upId=this.active.upId;
+        this.dialogModel=true;
     }
   }
 }

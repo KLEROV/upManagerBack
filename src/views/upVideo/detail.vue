@@ -3,71 +3,69 @@
         <!--工具栏-->
         <div class="head-container">
           
-            <template>
-                <!-- <el-button  type="primary" size="small" @click='add'>查看</el-button> -->
-                <el-button  type="primary" size="medium" @click='add'>新增</el-button>
-            </template>
-                
+            <!-- 搜索 -->
+            <el-input
+              v-model="query.upId"
+              clearable
+              size="small"
+              placeholder="UP主ID"
+              style="width: 200px;"
+              class="filter-item"
+              @keyup.enter.native="crud.toQuery"
+            />
+            <el-input
+              v-model="query.videoText"
+              clearable
+              size="small"
+              placeholder="视频名称"
+              style="width: 200px;"
+              class="filter-item"
+              @keyup.enter.native="crud.toQuery"
+            />
+            <date-range-picker v-model="query.createTime" class="date-item" />
+            <el-select
+              v-model="query.productLine"
+              clearable
+              size="small"
+              placeholder="平台名称"
+              class="filter-item"
+              style="width: 90px"
+              @change="handleClick"
+            >
+              <el-option
+                v-for="item in enabledTypeOptions"
+                :key="item.key"
+                :label="item.display_name"
+                :value="item.key"
+              />
+            </el-select>
+            <rrOperation />
+            <div>视频数量：2&nbsp;播放量：2&nbsp;播放量：2&nbsp;播放量（扣量后）：2&nbsp;销售额：2&nbsp;销售额（扣量后）：2</div>
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
             <!-- <crudOperation :permission="permission" /> -->
             <!--表单组件-->
-            
-            <el-dialog :close-on-click-modal="false" :visible.sync="dialogModel" :title="dialogTitle" width="600px">
-                <el-form ref="dialogForm" :model="dialogForm" :rules="rules" size="small" label-width="70px">
-                    <div v-if='playStatus'>
-                      <div v-if='dialogForm.text'>   
-                        <el-form-item label="id">
-                            <el-input v-model="dialogForm.id" style="width: 370px;" :disabled='true'/>
-                        </el-form-item>
-                        <el-form-item label="上传封面">
-                            <el-upload :on-change="change" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1'>
-                                <span v-if='dialogForm.cover'>{{dialogForm.cover}}</span>
-                                <el-button size="small" type="primary">点击上传</el-button>
-                            </el-upload>
-                        </el-form-item>
-                    </div>
-                    <div v-else>
-                        <el-form-item label="上传视频">
-                            <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1'>
-                                <span>{{dialogForm.videoUrl}}</span>
-                                <el-button size="small" type="primary">点击上传</el-button>
-                            </el-upload>
-                        </el-form-item>
-                        <el-form-item label="进度" v-if="uploadList.length>0">
-                            <div v-for='(item,index) in uploadList' :key='index'>
-                                <label :class='item.color'>{{item.title}}{{item.status}}</label>
-                                <!-- <el-progress :percentage="100" color="green"  status="success"></el-progress> -->
-                            </div>
-                        </el-form-item>
-                    </div> 
-                   </div>
-                    <video :src='dialogForm.videoUrl' :controls='true' width='100%' v-else/>
-                    
-                </el-form>
-                <div slot="footer" class="dialog-footer">
-                    <el-button type="text" @click="dialogModel=false">取消</el-button>
-                    <!-- <el-button type="text" @click="cancle" v-else>取消</el-button> -->
-                    <el-button :loading="dialogLoading" type="primary" @click="submit" v-if='playStatus'>确认</el-button>
-                </div>
-            </el-dialog>
-            
             <!--表格渲染-->
             <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
-                <el-table-column type="selection" width="55" />
-                <el-table-column prop="id" label="id" />
+               
+                <el-table-column prop="totalDate" label="日期" />
+                <el-table-column prop="videoId" label="视频id" />
                 <el-table-column prop="upId" label="upId" />
-                <el-table-column prop="cover" label="封面">
+                <el-table-column prop="videoText" label="videoText" />
+                <el-table-column prop="upId" label="视频数据">
                     <template slot-scope="scope">
-                        <img :src="scope.row.cover" style='width:100%'/>
+                        <div>{{scope.row.costModel==1?'销售额':'播放量'}}:{{scope.row.costAfter}}</div>
+                        <div>扣量后{{scope.row.costModel==1?'销售额':'播放量'}}:{{scope.row.costBefore}}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="videoUrl" label="视频" />
-                <el-table-column fixed="right" label="操作" width="100">
+                <el-table-column prop="profitBefore" label="收益(分成前)" />
+                <el-table-column prop="profitAfter" label="收益(分成后)" />
+                <el-table-column prop="productLine" label="已发布平台"></el-table-column>
+                <!-- <el-table-column fixed="right" label="操作" width="100">
                     <template slot-scope="scope">
                         <el-button type="text" size="small" @click='edit(scope.row)'>编辑</el-button>
                         <el-button type="text" size="small" @click='edit(scope.row,1)'>播放</el-button>
                     </template>
-                </el-table-column>
+                </el-table-column> -->
             </el-table>
             <!--分页组件-->
             <pagination />
@@ -82,17 +80,17 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
-
+import DateRangePicker from '@/components/DateRangePicker'
 const defaultForm = {}
 export default {
   name: 'upUser',
-  components: { pagination, crudOperation, rrOperation, udOperation },
+  components: { pagination, crudOperation, rrOperation, udOperation,DateRangePicker },
   mixins: [presenter(), header(), form(defaultForm), crud()],
   cruds() {
     return CRUD({
       title: "",
     //   url: "api/UPUser",
-      url: "api/upOperation",
+      url: "api/UPUser/detailed",
       sort: "id,desc",
       crudMethod: { ...crudupUser },
       optShow: {
@@ -112,16 +110,13 @@ export default {
       },
       rules: {
       },
-      imageUrl: null,
-      videoUrl:null,
-      dialogModel:false,
-      dialogTitle:'编辑',
-      dialogLoading:false,
-      dialogForm:{},
-      playStatus:true,
-      uploadList:[],
-      name:null,
-      indexCount:-1
+
+      enabledTypeOptions:[
+        { key: 'CL01', display_name: 'CL01' },
+        { key: 'CL02', display_name: 'CL02' },
+        { key: 'CL03', display_name: 'CL03' },
+        { key: 'CL04', display_name: 'CL04' }
+      ],
     }
   },
   mounted(){
@@ -224,16 +219,8 @@ export default {
         })
         
     },
-    change(file){
-       
-        this.imageUrl=file.raw;
-        this.dialogForm.cover=file.name;
-    },
-    change1(file){
-        this.dialogForm.videoUrl=file.name;
-       
-        this.name=file.name.slice(0,file.name.lastIndexOf('.'));
-        this.videoUrl=file.raw;
+    handleClick(tab, event){
+        console.log(tab, event);
     }
   }
 }
