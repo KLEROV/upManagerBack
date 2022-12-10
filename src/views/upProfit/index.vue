@@ -69,7 +69,6 @@
                     <template slot-scope="scope">
                         <div>{{scope.row.costModel==1?'销售额':'播放量'}}</div>
                     </template>
-                   
                 </el-table-column>
                 <el-table-column prop="price" label="单价计费">
                     <!-- <div>{{scope.row.price?scope.row.price:0}}元</div> -->
