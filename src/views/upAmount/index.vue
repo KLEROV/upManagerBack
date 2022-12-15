@@ -39,22 +39,6 @@
                 :value="item.key"
               />
             </el-select>
-            <el-select
-              v-model="query.costModel"
-              clearable
-              size="small"
-              placeholder="模式"
-              class="filter-item"
-              style="width: 90px"
-              @change="handleClick"
-            >
-              <el-option
-                v-for="item in costModel"
-                :key="item.key"
-                :label="item.display_name"
-                :value="item.key"
-              />
-            </el-select>
             <rrOperation />
             
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
@@ -62,32 +46,15 @@
             <!--表单组件-->
             <!--表格渲染-->
             <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
-                <el-table-column prop="totalDate" label="日期" />
-               
-                <el-table-column prop="upId" label="up主Id" />
-                <el-table-column prop="costModel" label="模式">
+                <el-table-column type="selection" width="55" />
+                <el-table-column prop="id" label="id" />
+                <el-table-column prop="upId" label="upId" />
+                <el-table-column prop="cover" label="封面">
                     <template slot-scope="scope">
-                        <div>{{scope.row.costModel==1?'销售额':'播放量'}}</div>
+                        <img :src="scope.row.cover" style='width:100%'/>
                     </template>
                 </el-table-column>
-                <el-table-column prop="price" label="单价计费">
-                    <template slot-scope="scope">
-                    <div>{{scope.row.price?scope.row.price:0}}元</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="divide" label="分成比">
-                    <template slot-scope="scope">
-                    <div>{{scope.row.divide?scope.row.divide:0}}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="costs" label="扣量比">
-                    <template slot-scope="scope">
-                    <div>{{scope.row.costs?scope.row.costs:0}}</div>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="profitBefore" label="收益(分成前)" />
-                <el-table-column prop="profitAfter" label="收益(分成后)" />
-                <el-table-column prop="productLine" label="已发布平台"></el-table-column>
+                <el-table-column prop="videoUrl" label="视频" />
                 <!-- <el-table-column fixed="right" label="操作" width="100">
                     <template slot-scope="scope">
                         <el-button type="text" size="small" @click='edit(scope.row)'>编辑</el-button>
@@ -102,14 +69,14 @@
 </template>
 
 <script>
-import crudupUser from '@/api/upUser/video'
+import crudupUser from '@/api/admin/index'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
-const defaultForm = {}
+const defaultForm = {upId:3}
 export default {
   name: 'upUser',
   components: { pagination, crudOperation, rrOperation, udOperation,DateRangePicker },
@@ -118,7 +85,7 @@ export default {
     return CRUD({
       title: "",
     //   url: "api/UPUser",
-      url: "api/UPUser/detailed",
+      url: "api/UPUser/upAmount",
       sort: "id,desc",
       crudMethod: { ...crudupUser },
       optShow: {
@@ -138,10 +105,7 @@ export default {
       },
       rules: {
       },
-      costModel:[
-        { key: '1', display_name: '销售额' },
-        { key: '2', display_name: '播放量' }
-      ],
+
       enabledTypeOptions:[
         { key: 'CL01', display_name: 'CL01' },
         { key: 'CL02', display_name: 'CL02' },

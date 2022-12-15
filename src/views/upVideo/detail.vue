@@ -40,7 +40,7 @@
               />
             </el-select>
             <rrOperation />
-            <div>视频数量：2&nbsp;播放量：2&nbsp;播放量：2&nbsp;播放量（扣量后）：2&nbsp;销售额：2&nbsp;销售额（扣量后）：2</div>
+            <!-- <div>视频数量：2&nbsp;播放量：2&nbsp;播放量：2&nbsp;播放量（扣量后）：2&nbsp;销售额：2&nbsp;销售额（扣量后）：2</div> -->
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
             <!-- <crudOperation :permission="permission" /> -->
             <!--表单组件-->
@@ -50,7 +50,7 @@
                 <el-table-column prop="totalDate" label="日期" />
                 <el-table-column prop="videoId" label="视频id" />
                 <el-table-column prop="upId" label="upId" />
-                <el-table-column prop="videoText" label="videoText" />
+                <el-table-column prop="videoText" label="视频标题" />
                 <el-table-column prop="upId" label="视频数据">
                     <template slot-scope="scope">
                         <div>{{scope.row.costModel==1?'销售额':'播放量'}}:{{scope.row.costAfter}}</div>

@@ -22,15 +22,14 @@
                         <el-form-item label="上传封面">
                             <el-upload :on-change="change" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1'>
                                 <span v-if='dialogForm.cover'>{{dialogForm.cover}}</span>
-                                <el-button size="small" type="primary">点击上传</el-button>
+                                <el-button size="small" type="primary">选择文件</el-button>
                             </el-upload>
                         </el-form-item>
                     </div>
                     <div v-else>
                         <el-form-item label="上传视频">
-                            <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1'>
-                                <span>{{dialogForm.videoUrl}}</span>
-                                <el-button size="small" type="primary">点击上传</el-button>
+                            <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1' :file-list='[]'> 
+                                <el-button size="small" type="primary">选择文件</el-button>
                             </el-upload>
                         </el-form-item>
                         <el-form-item label="进度" v-if="uploadList.length>0">
@@ -39,15 +38,16 @@
                                 <!-- <el-progress :percentage="100" color="green"  status="success"></el-progress> -->
                             </div>
                         </el-form-item>
-                    </div> 
+                    </div>
+                    <!-- <label style='color:red'>每次文件上传后请删除队列中的视频后再次上传</label>  -->
                    </div>
                     <video :src='dialogForm.videoUrl' :controls='true' width='100%' v-else/>
                     
                 </el-form>
                 <div slot="footer" class="dialog-footer">
-                    <el-button type="text" @click="dialogModel=false">取消</el-button>
+                    <el-button type="text" @click="dialogModel=false;crud.refresh();">取消</el-button>
                     <!-- <el-button type="text" @click="cancle" v-else>取消</el-button> -->
-                    <el-button :loading="dialogLoading" type="primary" @click="submit" v-if='playStatus'>确认</el-button>
+                    <el-button :loading="dialogLoading" type="primary" @click="submit" v-if='playStatus'>上传</el-button>
                 </div>
             </el-dialog>
             
@@ -196,7 +196,6 @@ export default {
                 return false;
             }
             this.indexCount++;
-          
             data.append('multipartFile', this.videoUrl);
             fun=crudupUser.uploadVideo;
             this.uploadList.push({title:this.dialogForm.videoUrl,status:'上传中...',color:'loading',name:this.name,index:this.indexCount});
@@ -225,15 +224,14 @@ export default {
         
     },
     change(file){
-       
         this.imageUrl=file.raw;
         this.dialogForm.cover=file.name;
     },
     change1(file){
         this.dialogForm.videoUrl=file.name;
-       
         this.name=file.name.slice(0,file.name.lastIndexOf('.'));
         this.videoUrl=file.raw;
+        console.log(file);
     }
   }
 }

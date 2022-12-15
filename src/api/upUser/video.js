@@ -29,4 +29,12 @@ export function del(data) {
       data
     })
   }
+  //查询UP主视频总计接口
+  export function total(data) {
+    return request({
+      url: 'api/UPUser/upDetailedTotal',
+      method: 'get',
+      data
+    })
+  }
 export default { get, uploadVideo, uploadCover}
