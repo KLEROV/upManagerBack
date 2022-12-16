@@ -29,4 +29,11 @@ export function del(data) {
       data
     })
   }
-export default { get, edit, add ,del}
+  export function setStatus(data) {
+    return request({
+      url: 'api/upTakingRecord/verify',
+      method: 'put',
+      data
+    })
+  }
+export default { get, edit, add ,del,setStatus}

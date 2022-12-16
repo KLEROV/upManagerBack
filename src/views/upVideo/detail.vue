@@ -89,8 +89,8 @@ export default {
   cruds() {
     return CRUD({
       title: "",
-    //   url: "api/UPUser",
-      url: "api/UPUser/detailed",
+      url: "/api/UPUser/upDetailedTotal",
+    //   url: "api/UPUser/detailed",
       sort: "id,desc",
       crudMethod: { ...crudupUser },
       optShow: {
