@@ -125,13 +125,13 @@ export default {
     },
     dialogSubmit(){
         this.dialogLoading=true;
-        if(!/^[0-9]\d*$/.test(this.dialogForm.value)){
-            this.$message.error('请正确输入upId!');
+        if(this.dialogForm.key==undefined||this.dialogForm.key.replace(new RegExp(/( )/g),"")==''){
+            this.$message.error('请正确输入key!');
             this.dialogLoading=false;
             return false
         }
-        if(!/^[0-9]\d*$/.test(this.dialogForm.key)){
-            this.$message.error('请正确输入upId!');
+        if(!/^[0-9]\d*$/.test(this.dialogForm.value)){
+            this.$message.error('请正确输入value!');
             this.dialogLoading=false;
             return false
         }

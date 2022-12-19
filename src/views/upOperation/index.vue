@@ -20,7 +20,7 @@
                             <el-input v-model="dialogForm.id" style="width: 370px;" :disabled='true'/>
                         </el-form-item>
                         <el-form-item label="上传封面">
-                            <el-upload :on-change="change" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1'>
+                            <el-upload :on-change="change" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1' :file-list='[]'>
                                 <span v-if='dialogForm.cover'>{{dialogForm.cover}}</span>
                                 <el-button size="small" type="primary">选择文件</el-button>
                             </el-upload>
@@ -28,7 +28,7 @@
                     </div>
                     <div v-else>
                         <el-form-item label="上传视频">
-                            <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1' :file-list='[]'> 
+                            <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1' :file-list='[]' ref="file"> 
                                 <el-button size="small" type="primary">选择文件</el-button>
                             </el-upload>
                         </el-form-item>
@@ -65,9 +65,8 @@
                     <template slot-scope="scope">
                         <div>{{dealTime(scope.row.duration)}}</div>
                     </template>
-                    
                 </el-table-column>
-                <el-table-column prop="videoUrl" label="视频" />
+                <el-table-column prop="text" label="视频" />
                 <el-table-column fixed="right" label="操作" width="100">
                     <template slot-scope="scope">
                         <el-button type="text" size="small" @click='edit(scope.row)'>编辑</el-button>
@@ -88,7 +87,8 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
-
+import hex_md5 from './md5'
+import Tool from './tool'
 const defaultForm = {}
 export default {
   name: 'upUser',
@@ -127,7 +127,9 @@ export default {
       playStatus:true,
       uploadList:[],
       name:null,
-      indexCount:-1
+      indexCount:-1,
+      shardSize: 50*1024 * 1024, //以100M为一个分片
+      suffixs:['mp4','mov','MP4']
     }
   },
   mounted(){
@@ -179,10 +181,123 @@ export default {
 
       
     },
+    uploadFile(nowFile) {//视频上传
+        let _this = this;
+        let formData = new window.FormData();
+        
+        let key = hex_md5(nowFile.name + nowFile.size + nowFile.type);
+        let key10 = parseInt(key, 16);
+        let key62 = Tool._10to62(key10);
+        
+        let suffixs = _this.suffixs;
+        let fileName = nowFile.name;
+      
+        let suffix = fileName.substring(fileName.lastIndexOf(".")+1, fileName.length).toLowerCase();
+        if(!(!suffixs || JSON.stringify(suffixs) === "{}" || suffixs.length === 0)) {
+            let validateSuffix = false;
+            for(let s of this.suffixs) {
+                if(s.toLocaleLowerCase() === suffix) {
+                    validateSuffix = true;
+                    break;
+                }
+            }
+            if(!validateSuffix) {
+                this.$message.error('请上传正确格式的文件!');
+                this.dialogLoading=false;
+                return false;
+            }
+        }
+        // 文件分片
+        let shardSize = _this.shardSize;  
+        let shardIndex = 1;   // 分片索引，1表示第1个分片
+        let size = nowFile.size;
+        let shardTotal = Math.ceil(size / shardSize); // 总分片数
+ 
+        let param = {
+          'shardIndex': shardIndex,
+          'shardSize': shardSize,
+          'shardTotal': shardTotal,
+          'name': nowFile.name,
+          'suffix': suffix,
+          'size': nowFile.size,
+          'key': key62
+        };
+        _this.check(param);
+      },
+      check(param) {
+        let _this = this;
+        _this.indexCount++;
+        _this.uploadList.push({title:_this.dialogForm.videoUrl,status:'上传中...',color:'loading',index:_this.indexCount,data:_this.videoUrl});
+        crudupUser.uploadContinue(param.key).then((res)=> {
+          
+            if(res.key) {
+                const abc=_this.uploadList.find((item)=>res.name==item.title);
+              if (res.shardIndex === res.shardTotal) {
+                // 已上传分片 = 分片总数，说明已全部上传完，不需要再上传
+                
+                _this.$message.success(`${abc.title}上传成功!`);
+                _this.uploadList[abc.index].color='success';
+                _this.uploadList[abc.index].status='上传成功!';
+              }else {
+                    let paramNow=res;
+                    paramNow.shardIndex = paramNow.shardIndex + 1;
+                
+                _this.upload(paramNow,abc.data);
+              }
+            } else {
+                _this.$message.error(res);
+            }
+        }).catch((err) => {
+            _this.$message.error(err);
+        });
+      },
+      /**
+       * 递归上传分片
+       */
+    upload(param,nowFile) {
+        let _this = this;
+        let shardIndex = param.shardIndex;
+        let shardTotal = param.shardTotal;
+        let shardSize = param.shardSize;
+        let fileShard = _this.getFileShard(shardIndex,shardSize,nowFile);
+    
+        // 将文件转为base64进行传输
+        let fileReader = new FileReader();
+        fileReader.readAsDataURL(fileShard);
+        fileReader.onload = function (e) {
+            let base64 = e.target.result;
+            param.shard = base64;
+            
+            crudupUser.uploadVideo(param).then((res)=> { 
+                const abc=_this.uploadList.find((item)=>res.name==item.title); 
+                if(res.shardIndex < res.shardTotal) {
+                
+                    let paramNow=res;
+                    paramNow.shardIndex = res.shardIndex + 1;
+                    
+                    this.upload(paramNow,abc.data);
+                } else {
+                    _this.$message.success(`${abc.title}上传成功!`);
+                    _this.uploadList[abc.index].color='success';
+                    _this.uploadList[abc.index].status='上传成功!';
+                }
+            });
+        };
+    },
+
+    getFileShard(shardIndex, shardSize) {
+        let _this = this;
+        let file = this.videoUrl.raw;
+     
+        let start = (shardIndex - 1) * shardSize; // 当前分片起始位置
+        let end = Math.min(file.size, start + shardSize); // 当前分片结束位置
+        let fileShard = file.slice(start, end); // 从文件中截取当前的分片数据
+        return fileShard;
+     },
     submit(){
-        var data = new FormData();
-        let fun=crudupUser.uploadCover;
+        
         if(this.dialogForm.text){
+            var data = new FormData();
             this.dialogLoading=true;
             if(this.dialogForm.id==undefined){
                 this.$message.error('videoId不能为空!');
@@ -194,39 +309,28 @@ export default {
                 this.dialogLoading=false;
                 return false;
             }
-            data.append('multipartFile', this.imageUrl)
-        }else{
-            if(!this.videoUrl){
-                this.$message.error('视频不能为空!');
-                // this.dialogLoading=false;
-                return false;
-            }
-            this.indexCount++;
-            data.append('multipartFile', this.videoUrl);
-            fun=crudupUser.uploadVideo;
-            this.uploadList.push({title:this.dialogForm.videoUrl,status:'上传中...',color:'loading',name:this.name,index:this.indexCount});
-        }
-        fun(data,this.dialogForm.id).then(res=>{
-            const abc=this.uploadList.find((item)=>res.fileName.indexOf(item.name)>=0);
-           
-            if(res){
-                if(this.uploadList.length>0){
-                    this.$message.success(`${abc.name}上传成功!`);
-                    this.uploadList[abc.index].color='success';
-                    this.uploadList[abc.index].status='上传成功!';
-                }else{
+            data.append('multipartFile', this.imageUrl);
+            crudupUser.uploadCover(data,this.dialogForm.id).then(res=>{
+                if(res){
                     this.$message.success(`操作成功!`);
                     this.dialogModel=false;
                     this.crud.refresh();
+                }else{
+                    this.$message.error(res);
                 }
-            }else{
-                this.$message.error(res);
+                this.dialogLoading=false;
+            }).catch(err=>{
+                this.$message.error(err);
+                this.dialogLoading=false;
+            })
+        }else{
+            if(!this.videoUrl){
+                this.$message.error('视频不能为空!');
+                return false;
             }
-            this.dialogLoading=false;
-        }).catch(err=>{
-            this.$message.error(err);
-            this.dialogLoading=false;
-        })
+            this.uploadFile(this.videoUrl);
+            
+       }
         
     },
     change(file){
@@ -236,8 +340,8 @@ export default {
     change1(file){
         this.dialogForm.videoUrl=file.name;
         this.name=file.name.slice(0,file.name.lastIndexOf('.'));
-        this.videoUrl=file.raw;
-        console.log(file);
+        this.videoUrl=file;
+        console.log(file,121)
     },
     dealTime(time){
         if(!time){

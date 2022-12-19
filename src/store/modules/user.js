@@ -47,7 +47,9 @@ const user = {
     GetInfo({ commit }) {
       return new Promise((resolve, reject) => {
         getInfo().then(res => {
-          setUserInfo(res, commit)
+          localStorage.setItem('name',res.user.username);
+        
+          setUserInfo(res, commit);
           resolve(res)
         }).catch(error => {
           reject(error)
@@ -58,7 +60,8 @@ const user = {
     LogOut({ commit }) {
       return new Promise((resolve, reject) => {
         logout().then(res => {
-          logOut(commit)
+          logOut(commit);
+          localStorage.clear();
           resolve()
         }).catch(error => {
           logOut(commit)

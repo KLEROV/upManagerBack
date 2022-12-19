@@ -1,463 +1,277 @@
 <template>
-  <div class="container">
-    <h2>Minio 上传示例</h2>
-    <el-upload
-      class="upload-demo"
-      ref="upload"
-      action="https://jsonplaceholder.typicode.com/posts/"
-      :on-remove="handleRemove"
-      :on-change="handleFileChange"
-      :file-list="uploadFileList"
-      :show-file-list="false"
-      :auto-upload="false">
-      <el-button slot="trigger" type="primary" plain>选择文件</el-button>
-      <el-button style="margin-left: 10px;" type="success" @click="handleUpload" plain>上传</el-button>
-      <el-button type="danger" @click="clearFileHandler" plain>清空</el-button>
-    </el-upload>
-    <!-- 文件列表 -->
-    <div class="file-list-wrapper">
-      <el-collapse>
-        <el-collapse-item v-for="(item, index) in uploadFileList" :key="index">
-          <template slot="title">
-            <div class="upload-file-item">
-              <div class="file-info-item file-name">文件名：{{ item.name }}</div>
-              <div class="file-info-item file-size">文件大小：{{ item.size | transformByte }}</div>
-              <div class="file-info-item file-progress">
-                <span class="file-progress-label">文件进度：</span>
-                <el-progress :percentage="item.uploadProgress" class="file-progress-value" />
-              </div>
-              <div class="file-info-item file-size"><span>状态：</span>
-                <el-tag v-if="item.status === '等待上传'" size="medium" type="info">等待上传</el-tag>
-                <el-tag v-else-if="item.status === '校验MD5'" size="medium" type="warning">校验MD5</el-tag>
-                <el-tag v-else-if="item.status === '正在上传'" size="medium">正在上传</el-tag>
-                <el-tag v-else-if="item.status === '上传成功'" size="medium" type="success">上传完成</el-tag>
-                <el-tag v-else size="medium" type="danger">上传错误</el-tag>
-              </div>
-          </div>
-          </template>
-          <div class="file-chunk-list-wrapper">
-            <!-- 分片列表 -->
-            <el-table
-              :data="item.chunkList"
-              max-height="400"
-              style="width: 100%">
-              <el-table-column
-              prop="chunkNumber"
-              label="分片序号"
-              width="180">
-              </el-table-column>
-              <el-table-column
-              prop="progress"
-              label="上传进度">
-              <template v-slot="{ row }">
-                <el-progress v-if="!row.status || row.progressStatus === 'normal'" :percentage="row.progress" />
-                <el-progress v-else :percentage="row.progress" :status="row.progressStatus" :text-inside="true" :stroke-width="16" />
-              </template>
-              </el-table-column>
-              <el-table-column
-                prop="status"
-                label="状态"
-                width="180">
-              </el-table-column>
+    <div class="app-container">
+        <!--工具栏-->
+        <div class="head-container">
+          
+            <template>
+                <!-- <el-button  type="primary" size="small" @click='add'>查看</el-button> -->
+                <el-button  type="primary" size="medium" @click='add'>新增</el-button>
+            </template>
+                
+            <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
+            <!-- <crudOperation :permission="permission" /> -->
+            <!--表单组件-->
+            
+            <el-dialog :close-on-click-modal="false" :visible.sync="dialogModel" :title="dialogTitle" width="600px">
+                <el-form ref="dialogForm" :model="dialogForm" :rules="rules" size="small" label-width="70px">
+                    <div v-if='playStatus'>
+                      <div v-if='dialogForm.text'>   
+                        <el-form-item label="id">
+                            <el-input v-model="dialogForm.id" style="width: 370px;" :disabled='true'/>
+                        </el-form-item>
+                        <el-form-item label="上传封面">
+                            <el-upload :on-change="change" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1'>
+                                <span v-if='dialogForm.cover'>{{dialogForm.cover}}</span>
+                                <el-button size="small" type="primary">选择文件</el-button>
+                            </el-upload>
+                        </el-form-item>
+                    </div>
+                    <div v-else>
+                        <el-form-item label="上传视频">
+                            <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1' :file-list='[]' ref="file"> 
+                                <el-button size="small" type="primary">选择文件</el-button>
+                            </el-upload>
+                        </el-form-item>
+                        <el-form-item label="进度" v-if="uploadList.length>0">
+                            <div v-for='(item,index) in uploadList' :key='index'>
+                                <label :class='item.color'>{{item.title}}{{item.status}}</label>
+                                <!-- <el-progress :percentage="100" color="green"  status="success"></el-progress> -->
+                            </div>
+                        </el-form-item>
+                    </div>
+                    <!-- <label style='color:red'>每次文件上传后请删除队列中的视频后再次上传</label>  -->
+                   </div>
+                    <video :src='dialogForm.videoUrl' :controls='true' width='100%' v-else/>
+                    
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="text" @click="dialogModel=false;crud.refresh();">取消</el-button>
+                    <!-- <el-button type="text" @click="cancle" v-else>取消</el-button> -->
+                    <el-button :loading="dialogLoading" type="primary" @click="submit" v-if='playStatus'>上传</el-button>
+                </div>
+            </el-dialog>
+            
+            <!--表格渲染-->
+            <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
+                <el-table-column type="selection" width="55" />
+                <el-table-column prop="id" label="id" />
+                <el-table-column prop="upId" label="upId" />
+                <el-table-column prop="cover" label="封面">
+                    <template slot-scope="scope">
+                        <img :src="scope.row.cover" style='width:100%'/>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="cover" label="时长">
+                    <template slot-scope="scope">
+                        <div>{{dealTime(scope.row.duration)}}</div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="text" label="视频" />
+                <el-table-column fixed="right" label="操作" width="100">
+                    <template slot-scope="scope">
+                        <el-button type="text" size="small" @click='edit(scope.row)'>编辑</el-button>
+                        <el-button type="text" size="small" @click='edit(scope.row,1)'>播放</el-button>
+                    </template>
+                </el-table-column>
             </el-table>
-          </div>
-         
-        </el-collapse-item>
-      </el-collapse>
+            <!--分页组件-->
+            <pagination />
+        </div>
     </div>
-  </div>
 </template>
 
 <script>
-import SparkMD5 from 'spark-md5'
-import axios from 'axios'
-const FILE_UPLOAD_ID_KEY = 'file_upload_id'
-const chunkSize = 10 * 1024 * 1024
-let currentFileIndex = 0
-const FileStatus = {
-  wait: '等待上传',
-  getMd5: '校验MD5',
-  uploading: '正在上传',
-  success: '上传成功',
-  error: '上传错误'
-}
-  export default {
-    data () {
-      return {
-        changeDisabled: false,
-        uploadDisabled: false,
-        // 上传并发数
-        simultaneousUploads: 3,
-        uploadIdInfo: null,
-        uploadFileList: [],
-        retryList: []
-      }
+import crudupUser from '@/api/upUser/video'
+import CRUD, { presenter, header, form, crud } from '@crud/crud'
+import rrOperation from '@crud/RR.operation'
+import crudOperation from '@crud/CRUD.operation'
+import udOperation from '@crud/UD.operation'
+import pagination from '@crud/Pagination'
+const defaultForm = {}
+export default {
+  name: 'upUser',
+  components: { pagination, crudOperation, rrOperation, udOperation },
+  mixins: [presenter(), header(), form(defaultForm), crud()],
+  cruds() {
+    return CRUD({
+      title: "",
+    //   url: "api/UPUser",
+      url: "api/upOperation",
+      sort: "id,desc",
+      crudMethod: { ...crudupUser },
+      optShow: {
+          add: true,
+          edit: false,
+          del: false,
+          reset: false
+        },
+    });
+  },
+  data() {
+    return {
+      permission: {
+        add: ['admin', 'upOperation:add'],
+        edit: ['admin', 'upOperation:edit'],
+        del: ['admin', 'upOperation:del']
+      },
+      rules: {
+      },
+      imageUrl: null,
+      videoUrl:null,
+      dialogModel:false,
+      dialogTitle:'编辑',
+      dialogLoading:false,
+      dialogForm:{},
+      playStatus:true,
+      uploadList:[],
+      name:null,
+      indexCount:-1,
+    }
+  },
+  mounted(){
+    
+  },
+  methods: {
+    // 钩子：在获取表格数据之前执行，false 则代表不获取数据
+    [CRUD.HOOK.beforeRefresh]() {      
+      return true
     },
-    methods: {
-      handleUpload() {
-        const self = this
-        const files = this.uploadFileList
-        if (files.length === 0) {
-          this.$message.error('请先选择文件')
-          return
+    add(){
+        this.dialogForm={};
+        this.uploadList=[];
+        this.indexCount =-1;
+        this.videoUrl=null;
+        this.dialogTitle='添加';
+        this.dialogModel=true;
+        this.playStatus=true;
+    },
+    edit(value,status){
+        if(status){
+            this.playStatus=false;
+        }else{
+            this.playStatus=true;
         }
-        // 当前操作文件
-        const currentFile = files[currentFileIndex]
-        currentFile.status = FileStatus.getMd5
-        // 1. 计算MD5
-        this.getFileMd5(currentFile.raw, async (md5) => {
-          // 2. 检查是否已上传
-          const checkResult = await self.checkFileUploadedByMd5(md5)
-          // 已上传
-          if (checkResult.data.status === 1) {
-            self.$message.success(`上传成功，文件地址：${checkResult.data.url}`)
-            console.log('文件访问地址：' + checkResult.data.url)
-            currentFile.status = FileStatus.success
-            currentFile.uploadProgress = 100
-            return
-          } else if (checkResult.data.status === 2) {  // "上传中" 状态
-            // 获取已上传分片列表
-            let chunkUploadedList = checkResult.data.chunkUploadedList
-            currentFile.chunkUploadedList = chunkUploadedList  
-          } else {   // 未上传
-            console.log('未上传')
-          }
+        this.dialogTitle='编辑';
+        this.imageUrl=null;
+        this.dialogForm=={};
+        this.dialogForm={...value};
+        if(status){
+            this.dialogTitle='播放';
+        }
+        this.dialogModel=true;
+    },
+    cancle(){
+        this.crud.status.edit=0;
+        this.crud.status.cu=0;
+        this.uploadList=[];
+        this.indexCount-1;
+    },
+    [CRUD.HOOK.beforeToAdd]() {
+      this.crud.form.id=undefined;
+      this.imageUrl=null;
+      this.crud.form.videoUrl=null;
+     
+      return true
+    },
+    [CRUD.HOOK.beforeToEdit]() {
 
-          console.log('文件MD5：' + md5)
-          // 3. 正在创建分片
-          let fileChunks = self.createFileChunk(currentFile.raw, chunkSize)
-          
-          let param = {
-            fileName: currentFile.name,
-            fileSize: currentFile.size,
-            chunkSize: chunkSize,
-            fileMd5: md5,
-            contentType: 'application/octet-stream'
-          }
-          // 4. 获取上传url
-          let uploadIdInfoResult = await self.getFileUploadUrls(param)
-          self.uploadIdInfo = uploadIdInfoResult.data.data
-          self.saveFileUploadId(uploadIdInfoResult.data.data)
-          let uploadUrls = uploadIdInfoResult.data.data.uploadUrls
-          if (fileChunks.length !== uploadUrls.length) {
-            self.$message.error('文件分片上传地址获取错误')
-            return
-          }
-          self.$set(currentFile, 'chunkList', [])
-          fileChunks.map((chunkItem, index) => {
-            currentFile.chunkList.push({
-              chunkNumber: index + 1,
-              chunk: chunkItem,
-              uploadUrl: uploadUrls[index],
-              progress: 0,
-              status: '—'
-            })
-          })
-          let tempFileChunks = []
-          currentFile.chunkList.forEach((item) => {
-            tempFileChunks.push(item)
-          })
-          currentFile.status = FileStatus.uploading
-          // 处理分片列表，删除已上传的分片
-          tempFileChunks = self.processUploadChunkList(tempFileChunks)
-          // 5. 上传
-          await self.uploadChunkBase(tempFileChunks)
-          console.log('上传完成')
-          // 6. 合并文件
-          const mergeResult = await self.mergeFile({
-            uploadId: self.uploadIdInfo.uploadId,
-            fileName: currentFile.name,
-            md5: md5
-          })
-          if (!mergeResult.success) {
-            currentFile.status = FileStatus.error
-            self.$message.error(mergeResult.error)
-          } else {
-            currentFile.status = FileStatus.success
-            console.log('文件访问地址：' + mergeResult.data.url)
-            self.$message.success(`上传成功，文件地址：${mergeResult.data.url}`)
-          }
-        })   
-      },
-      clearFileHandler() {
-        this.uploadFileList = []
-        this.uploadIdInfo = null
-      },
-      handleFileChange(file, fileList) {
-        this.uploadFileList = fileList
-        this.uploadFileList.forEach((item) => {
-          // 初始化自定义属性
-          this.initFileProperties(item)
-        })
-      },
-      initFileProperties(file) {
-        file.chunkList = []
-        file.status = FileStatus.wait
-        file.progressStatus = 'warning'
-        file.uploadProgress = 0
-      },
-      handleRemove(file, fileList) {
-        this.uploadFileList = fileList
-      },
-      /**
-       * 分片读取文件 MD5
-       */
-      getFileMd5(file, callback) {
-        const blobSlice = File.prototype.slice || File.prototype.mozSlice || File.prototype.webkitSlice
-        const fileReader = new FileReader()
-        // 计算分片数
-        const totalChunks = Math.ceil(file.size / chunkSize)
-        console.log('总分片数：' + totalChunks)
-        let currentChunk = 0
-        const spark = new SparkMD5.ArrayBuffer()
-        loadNext()
-        fileReader.onload = function (e) {
-          try {
-            spark.append(e.target.result)
-          } catch (error) {
-            console.log('获取Md5错误：' + currentChunk)
-          }
-          if (currentChunk < totalChunks) {
-            currentChunk++
-            loadNext()
-          } else {
-            callback(spark.end())
-          }
-        }
-        fileReader.onerror = function () {
-          console.warn('读取Md5失败，文件读取错误')
-        }
-        function loadNext () {
-          const start = currentChunk * chunkSize
-          const end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize
-          // 注意这里的 fileRaw
-          fileReader.readAsArrayBuffer(blobSlice.call(file, start, end))
-        }
-      },
-      /**
-       * 文件分片
-       */
-      createFileChunk(file, size = chunkSize) {
-        const fileChunkList = []
-        let count = 0
-        while(count < file.size) {
-          fileChunkList.push({
-            file: file.slice(count, count + size),
-          })
-          count += size
-        }
-        console.log(fileChunkList,1212);
-        return fileChunkList
-      },
-      /**
-       * 处理即将上传的分片列表，判断是否有已上传的分片，有则从列表中删除
-       */
-      processUploadChunkList(chunkList) {
-        const currentFile = this.uploadFileList[currentFileIndex]
-        let chunkUploadedList = currentFile.chunkUploadedList
-        if (chunkUploadedList === undefined || chunkUploadedList === null || chunkUploadedList.length === 0) {
-          return chunkList
-        }
-        // 
-        for (let i = chunkList.length - 1; i >= 0; i--) {
-          const chunkItem = chunkList[i]
-          for (let j = 0; j < chunkUploadedList.length; j++) {
-            if (chunkItem.chunkNumber === chunkUploadedList[j]) {
-              chunkList.splice(i, 1)
-              break
-            }
-          }
-        }
-        return chunkList
-      },
-      uploadChunkBase(chunkList) {
-        const self = this
-        let successCount = 0
-        let totalChunks = chunkList.length
-        return new Promise((resolve, reject) => {
-          const handler = () => {
-            if (chunkList.length) {
-              const chunkItem = chunkList.shift()
-              // 直接上传二进制，不需要构造 FormData，否则上传后文件损坏
-              axios.put(chunkItem.uploadUrl, chunkItem.chunk.file, {
-                // 上传进度处理
-                onUploadProgress: self.checkChunkUploadProgress(chunkItem),
-                headers: {
-                  'Content-Type': 'application/octet-stream'
-                }
-              }).then(response => {
-                if (response.status === 200) {
-                  console.log('分片：' + chunkItem.chunkNumber + ' 上传成功')
-                  successCount++
-                  // 继续上传下一个分片
-                  handler()
-                } else {
-                  console.log('上传失败：' + response.status + '，' + response.statusText)
-                }
-              }).catch(error => {
-                // 更新状态
-                console.log('分片：' + chunkItem.chunkNumber + ' 上传失败，' + error)
-                // 重新添加到队列中
-                chunkList.push(chunkItem)
-                handler()
-              })
-            }
-            if (successCount >= totalChunks) {
-              resolve()
-            }
-          }
-          // 并发
-          for (let i = 0; i < this.simultaneousUploads; i++) {
-            handler()
-          }
-        })
-      },
-      getFileUploadUrls(fileParam) {
-        let url = `http://127.0.0.1:8027/upload?_=${Math.random()}`
-        return axios.post(url, fileParam)
-      },
-      saveFileUploadId(data) {
-        localStorage.setItem(FILE_UPLOAD_ID_KEY, data)
-      },
-      checkFileUploadedByMd5(md5) {
-        let url = `http://127.0.0.1:8027/upload/check?md5=${md5}`
-        return new Promise((resolve, reject) => {
-          axios.get(url).then((response) => {
-            resolve(response.data)
-          }).catch(error => {
-            reject(error)
-          })
-        })
-      },
-      /**
-       * 合并文件
-       */
-      mergeFile(file) {
-        const self = this
-        let url = `http://127.0.0.1:8027/upload/merge?uploadId=${file.uploadId}&fileName=${file.fileName}&md5=${file.md5}`
-        return new Promise((resolve, reject) => {
-          axios.post(url).then(response => {
-            let data = response.data
-            if (!data.success) {
-              file.status = FileStatus.error
-              resolve(data)
-            } else {
-              file.status = FileStatus.success
-              resolve(data)
-            }
-          }).catch(error => {
-            self.$message.error('合并文件失败：' + error)
-            file.status = FileStatus.error
-            reject()
-          })
-        })
-      },
-      /**
-       * 检查分片上传进度
-       */
-      checkChunkUploadProgress(item) {
-        return p => {
-          item.progress = parseInt(String((p.loaded / p.total) * 100))
-          this.updateChunkUploadStatus(item)
-        }
-      },
-      updateChunkUploadStatus(item) {
-        let status = FileStatus.uploading
-        let progressStatus = 'normal'
-        if (item.progress >= 100) {
-          status = FileStatus.success
-          progressStatus = 'success'
-        }
-        let chunkIndex = item.chunkNumber - 1
-        let currentChunk = this.uploadFileList[currentFileIndex].chunkList[chunkIndex]
-        // 修改状态
-        currentChunk.status = status
-        currentChunk.progressStatus = progressStatus
-        // 更新状态
-        this.$set(this.uploadFileList[currentFileIndex].chunkList, chunkIndex, currentChunk)
-        // 获取文件上传进度
-        this.getCurrentFileProgress()
-      },
-      getCurrentFileProgress() {
-        const currentFile = this.uploadFileList[currentFileIndex]
-        if (!currentFile || !currentFile.chunkList) {
-          return
-        }
-        const chunkList = currentFile.chunkList
-        const uploadedSize = chunkList.map((item) => item.chunk.file.size * item.progress).reduce((acc, cur) => acc + cur)
-        // 计算方式：已上传大小 / 文件总大小
-        let progress = parseInt((uploadedSize / currentFile.size).toFixed(2))
-        currentFile.uploadProgress = progress
-        this.$set(this.uploadFileList, currentFileIndex, currentFile)
-      }
+      
     },
-    filters: {
-      transformByte(size) {
-        if (!size) {
-          return '0B'
+    submit(){
+        var data = new FormData();
+        let fun=crudupUser.uploadCover;
+        if(this.dialogForm.text){
+            this.dialogLoading=true;
+            if(this.dialogForm.id==undefined){
+                this.$message.error('videoId不能为空!');
+                this.dialogLoading=false;
+                return false;
+            }
+            if(!this.imageUrl){
+                this.$message.error('未修改封面不能为提交!');
+                this.dialogLoading=false;
+                return false;
+            }
+            data.append('multipartFile', this.imageUrl)
+        }else{
+            if(!this.videoUrl){
+                this.$message.error('视频不能为空!');
+                // this.dialogLoading=false;
+                return false;
+            }
+            this.indexCount++;
+            data.append('multipartFile', this.videoUrl);
+            fun=crudupUser.uploadVideo;
+            this.uploadList.push({title:this.dialogForm.videoUrl,status:'上传中...',color:'loading',name:this.name,index:this.indexCount});
         }
-        const unitSize = 1024
-        if (size < unitSize) {
-          return size + ' B'
+        fun(data,this.dialogForm.id).then(res=>{
+            const abc=this.uploadList.find((item)=>res.fileName.indexOf(item.name)>=0);
+           
+            if(res){
+                if(this.uploadList.length>0){
+                    this.$message.success(`${abc.name}上传成功!`);
+                    this.uploadList[abc.index].color='success';
+                    this.uploadList[abc.index].status='上传成功!';
+                }else{
+                    this.$message.success(`操作成功!`);
+                    this.dialogModel=false;
+                    this.crud.refresh();
+                }
+            }else{
+                this.$message.error(res);
+            }
+            this.dialogLoading=false;
+        }).catch(err=>{
+            this.$message.error(err);
+            this.dialogLoading=false;
+        })
+        
+    },
+    change(file){
+        this.imageUrl=file.raw;
+        this.dialogForm.cover=file.name;
+    },
+    change1(file){
+        this.dialogForm.videoUrl=file.name;
+        this.name=file.name.slice(0,file.name.lastIndexOf('.'));
+        this.videoUrl=file.raw;
+        console.log(file);
+    },
+    dealTime(time){
+        if(!time){
+            return 0
+        }else{
+            let secondTime = parseInt(time)//将传入的秒的值转化为Number
+            let min = 0// 初始化分
+            let h =0// 初始化小时
+            let result=''
+            if(secondTime>=60){//如果秒数大于等于60，将秒数转换成整数
+                min=parseInt(secondTime/60)//获取分钟，除以60取整数，得到整数分钟
+                secondTime=parseInt(secondTime%60)//获取秒数，秒数取佘，得到整数秒数
+                if(min>=60){//如果分钟大于等于60，将分钟转换成小时
+                    h=parseInt(min/60)//获取小时，获取分钟除以60，得到整数小时
+                    min=parseInt(min%60) //获取小时后取佘的分，获取分钟除以60取佘的分
+                }
+            }
+            result=`${h.toString().padStart(2,'0')}:${min.toString().padStart(2,'0')}:${secondTime.toString().padStart(2,'0')}`
+            return result
         }
-        // KB
-        if (size < Math.pow(unitSize, 2)) {
-          return (size / unitSize).toFixed(2) + ' K';
-        }
-        // MB
-        if (size < Math.pow(unitSize, 3)) {
-          return (size / Math.pow(unitSize, 2)).toFixed(2) + ' MB'
-        }
-        // GB
-        if (size < Math.pow(unitSize, 4)) {
-          return (size / Math.pow(unitSize, 3)).toFixed(2) + ' GB';
-        }
-        // TB
-        return (size / Math.pow(unitSize, 4)).toFixed(2) + ' TB';
-      }
     }
   }
+}
 </script>
 
-<style>
-.container {
-  width: 1000px;
-  margin: 0 auto;
-}
-.file-list-wrapper {
-  margin-top: 20px;
-}
-h2 {
-  text-align: center;
-}
-.file-info-item {
-  margin: 0 20px;
-}
-.upload-file-item {
-  display: flex;
-}
-.file-progress {
-  display: flex;
-  align-items: center;
-}
-.file-progress-value {
-  width: 250px;
-}
-  .uploader-example {
-    width: 880px;
-    padding: 15px;
-    margin: 40px auto 0;
-    font-size: 12px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, .4);
-  }
-  .uploader-example .uploader-btn {
-    margin-right: 4px;
-  }
-  .uploader-example .uploader-list {
-    max-height: 440px;
-    overflow: auto;
-    overflow-x: hidden;
-    overflow-y: auto;
-  }
+<style scoped>
+    :deep(.el-upload-list){
+        /* display: none; */
+    }
+    .success{
+        color:green;
+    }
+    .loading{
+        color:#409eff;
+    }
+    .fail{
+        color:red;
+    }
 </style>
-

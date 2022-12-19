@@ -6,7 +6,7 @@ export function get() {
     method: 'get',
   })
 }
-
+//封面上传
 export function uploadCover(data,videoId) {
   return request({
     url: `api/upOperation/uploadCover?videoId=${videoId}`,
@@ -14,10 +14,18 @@ export function uploadCover(data,videoId) {
     data
   })
 }
+//断电续传
+export function uploadContinue(data) {
+  return request({
+    url: `api/upOperation/checkShard?key=${data}`,
+    method: 'get',
+  })
+}
 
 export function uploadVideo(data) {
   return request({
-    url: 'api/upOperation/uploadUpVideo/',
+    // url: 'api/upOperation/uploadUpVideo/',
+    url: 'api/upOperation/uploadBig',
     method: 'post',
     data
   })
@@ -37,4 +45,4 @@ export function del(data) {
       data
     })
   }
-export default { get, uploadVideo, uploadCover}
+export default { get, uploadVideo, uploadCover,uploadContinue}

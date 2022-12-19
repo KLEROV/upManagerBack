@@ -3,7 +3,7 @@ import request from '@/utils/request'
 
 export function getUpAmount() {
   return request({
-    url: `api/UPUser/upAmount`,
+    url: `api/upOperation/queryInformationByUp`,
     method: 'get',
   })
 }

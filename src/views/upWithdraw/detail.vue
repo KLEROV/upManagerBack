@@ -114,7 +114,7 @@ export default {
   cruds() {
     return CRUD({
       title: "扣量",
-      url: "api/upTakingRecord",
+      url: "api/upOperation/queryTakingRecordByUp",
       sort: "createTime,desc",
       crudMethod: { ...upWithdraw },
       optShow: {
