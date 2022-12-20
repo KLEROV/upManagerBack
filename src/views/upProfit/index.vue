@@ -67,7 +67,8 @@
                 <el-table-column prop="upId" label="up主Id" />
                 <el-table-column prop="costModel" label="模式">
                     <template slot-scope="scope">
-                        <div>{{scope.row.costModel==1?'销售额':'播放量'}}</div>
+                        <div v-if='scope.row.costModel==1'>销售额</div>
+                        <div v-if='scope.row.costModel==2'>播放量</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="price" label="单价计费">

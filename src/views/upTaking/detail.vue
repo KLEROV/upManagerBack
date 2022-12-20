@@ -85,7 +85,7 @@
                 <el-table-column fixed="right" label="操作" width="140">
                     <template slot-scope="scope">
                         <el-button type="text" size="small" @click='detail(scope.row)'>详情</el-button>
-                        <el-button type="text" size="small" @click='check(scope.row,1)' v-if='scope.row.verifyState==1'>通过</el-button>
+                        <el-button type="text" size="small" @click='check(scope.row,1)' v-if='scope.row.verifyState==0'>通过</el-button>
                         <el-button type="text" size="small" @click='check(scope.row,2)'>驳回</el-button>
                         <!-- <el-button type="text" size="small" @click='check(scope.row,1)'>通过</el-button>
                         <el-button type="text" size="small" @click='check(scope.row,2)'>驳回</el-button> -->

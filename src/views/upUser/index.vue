@@ -3,10 +3,10 @@
         <!--工具栏-->
         <div class="head-container">
            
-          <div v-if="crud.props.searchToggle">
+          <div>
             <!-- 搜索 -->
             <el-input
-              v-model="query.upId"
+              v-model="query.id"
               clearable
               size="small"
               placeholder="UP主ID"
@@ -15,7 +15,7 @@
               @keyup.enter.native="crud.toQuery"
             />
             <date-range-picker v-model="query.createTime" class="date-item" />
-            <el-select
+            <!-- <el-select
               v-model="query.type"
               clearable
               size="small"
@@ -30,7 +30,7 @@
                 :label="item.display_name"
                 :value="item.key"
               />
-            </el-select>
+            </el-select> -->
             <rrOperation />
           </div>
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->

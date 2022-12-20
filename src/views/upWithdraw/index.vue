@@ -198,18 +198,13 @@ export default {
         }
         let fun=upWithdraw.edit;
         fun(this.dialogForm).then(res=>{
-            if(res.code==200){
-                this.$message.success('操作成功!');
-                this.crud.refresh();
-                this.dialogForm={};
-                this.dialogModel=false;
-                this.dialogLoading=false;
-            }else{
-                this.$message.error(res.msg);
-                this.dialogLoading=false;
-            }
+            this.$message.success('操作成功!');
+            this.crud.refresh();
+            this.dialogForm={};
+            this.dialogModel=false;
+            this.dialogLoading=false;
         }).catch(err=>{
-            this.$message.error(err);
+            this.$message.error(err,1212);
             this.dialogLoading=false;
         })
     },

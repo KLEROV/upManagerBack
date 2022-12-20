@@ -28,17 +28,20 @@
                     </div>
                     <div v-else>
                         <el-form-item label="上传视频">
+                            <div style='color:red;font-size:18px;'>若是长时上传无进度请刷新选择文件重新上传</div>
                             <el-upload :on-change="change1" action='' class="upload-demo" :auto-upload='false' :multiple='false' :limit='1' :file-list='[]' ref="file"> 
                                 <el-button size="small" type="primary">选择文件</el-button>
                             </el-upload>
+                            
                         </el-form-item>
                         <el-form-item label="进度" v-if="uploadList.length>0">
                             <div v-for='(item,index) in uploadList' :key='index'>
                                 <label :class='item.color'>{{item.title}}{{item.status}}</label>
-                                <!-- <el-progress :percentage="100" color="green"  status="success"></el-progress> -->
+                                <el-progress :percentage="item.progress" color="green"></el-progress>
                             </div>
                         </el-form-item>
                     </div>
+                    
                     <!-- <label style='color:red'>每次文件上传后请删除队列中的视频后再次上传</label>  -->
                    </div>
                     <video :src='dialogForm.videoUrl' :controls='true' width='100%' v-else/>
@@ -128,7 +131,7 @@ export default {
       uploadList:[],
       name:null,
       indexCount:-1,
-      shardSize: 50*1024 * 1024, //以100M为一个分片
+      shardSize: 50*1024 * 1024, //以50M为一个分片
       suffixs:['mp4','mov','MP4']
     }
   },
@@ -217,7 +220,7 @@ export default {
           'shardIndex': shardIndex,
           'shardSize': shardSize,
           'shardTotal': shardTotal,
-          'name': nowFile.name,
+          'name': nowFile.name.slice(0,fileName.lastIndexOf(".")),
           'suffix': suffix,
           'size': nowFile.size,
           'key': key62
@@ -227,25 +230,28 @@ export default {
       check(param) {
         let _this = this;
         _this.indexCount++;
-        _this.uploadList.push({title:_this.dialogForm.videoUrl,status:'上传中...',color:'loading',index:_this.indexCount,data:_this.videoUrl});
+        _this.uploadList.push({title:_this.dialogForm.videoUrl.slice(0,_this.dialogForm.videoUrl.lastIndexOf(".")),status:'上传中...',color:'loading',index:_this.indexCount,data:_this.videoUrl,progress:0});
         crudupUser.uploadContinue(param.key).then((res)=> {
-          
+            
             if(res.key) {
-                const abc=_this.uploadList.find((item)=>res.name==item.title);
+              const abc=_this.uploadList.find((item)=>res.name.indexOf(item.title)>=0);
+             
               if (res.shardIndex === res.shardTotal) {
                 // 已上传分片 = 分片总数，说明已全部上传完，不需要再上传
                 
                 _this.$message.success(`${abc.title}上传成功!`);
                 _this.uploadList[abc.index].color='success';
+                _this.uploadList[abc.index].progress='100';
                 _this.uploadList[abc.index].status='上传成功!';
               }else {
-                    let paramNow=res;
-                    paramNow.shardIndex = paramNow.shardIndex + 1;
+                let paramNow={...res};
+                _this.uploadList[abc.index].progress=parseInt((res.shardIndex / res.shardTotal)*100);
+                paramNow.shardIndex = paramNow.shardIndex + 1;
                 
                 _this.upload(paramNow,abc.data);
               }
             } else {
-                _this.$message.error(res);
+                _this.upload(param,_this.videoUrl);
             }
         }).catch((err) => {
             _this.$message.error(err);
@@ -270,17 +276,20 @@ export default {
             
             crudupUser.uploadVideo(param).then((res)=> { 
                 const abc=_this.uploadList.find((item)=>res.name==item.title); 
-                if(res.shardIndex < res.shardTotal) {
                 
-                    let paramNow=res;
+                if(res.shardIndex < res.shardTotal) {
+                    let paramNow={...res};
+                    _this.uploadList[abc.index].progress=parseInt((res.shardIndex / res.shardTotal)*100);
                     paramNow.shardIndex = res.shardIndex + 1;
-                    
-                    this.upload(paramNow,abc.data);
+                    _this.upload(paramNow,abc.data);
                 } else {
                     _this.$message.success(`${abc.title}上传成功!`);
+                    _this.uploadList[abc.index].progress=100;
                     _this.uploadList[abc.index].color='success';
                     _this.uploadList[abc.index].status='上传成功!';
                 }
+            }).catch(err=>{
+                console.log(err,'错误');
             });
         };
     },
@@ -341,7 +350,6 @@ export default {
         this.dialogForm.videoUrl=file.name;
         this.name=file.name.slice(0,file.name.lastIndexOf('.'));
         this.videoUrl=file;
-        console.log(file,121)
     },
     dealTime(time){
         if(!time){
