@@ -69,10 +69,15 @@
                 </el-table-column>
                 <el-table-column prop="bankUser" label="昵称" />
                 <el-table-column prop="amount" label="提现金额（元）" />
-                <el-table-column prop="bankCard" label="提现账号" />
+                <el-table-column prop="bankCard" label="提现账号">
+                    <template slot-scope="scope">
+                        <div>{{scope.row.takingMode==1?scope.row.bankCard:scope.row.usdtAddr}}</div>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="takingMode" label="提现方式">
                     <template slot-scope="scope">
-                        <div>{{scope.row.takingMode==1?'银行卡':'USDT'}}</div>
+                        <div v-if='scope.row.takingMode==1'>银行卡</div>
+                        <div v-if='scope.row.takingMode==2'>USDT(TRC20)</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="verifyState" label="状态" >
@@ -109,8 +114,11 @@
                             <el-form-item label="所属支行">
                                 <div class='border'>{{dialogForm.bankDeposit}}</div>
                             </el-form-item>
+                            <el-form-item label="手机号">
+                                <div class='border'>{{dialogForm.phone}}</div>
+                            </el-form-item>
                         </div>
-                        <el-form-item label="USDT钱包地址" v-else>
+                        <el-form-item label="USDT(TRC20)钱包地址" v-else>
                             <div class='border'>{{dialogForm.usdtAddr}}</div>
                         </el-form-item>
                      </div>
@@ -184,7 +192,7 @@ export default {
       ],
       enabledTypeOptions:[
         { key: '1', display_name: '银行卡' },
-        { key: '2', display_name: 'UTSD' },
+        { key: '2', display_name: 'USDT(TRC20)' },
       ],
       statusOptions:[
         { key: '0', display_name: '未审核' },
@@ -252,9 +260,9 @@ export default {
         try {
             let msg='';
             if(this.dialogForm.takingMode==1){
-                msg=`银行卡帐号:${this.dialogForm.bankCard}\n收款人姓名:${this.dialogForm.bankUser}\n所属支行:${this.dialogForm.bankDeposit}\n`;
+                msg=`银行卡帐号:${this.dialogForm.bankCard}\n收款人姓名:${this.dialogForm.bankUser}\n所属支行:${this.dialogForm.bankDeposit}\n手机号:${this.dialogForm.phone}\n`;
             }else{
-                msg=`${checkForm.value.usdtAddr}`;
+                msg=`USDT(TRC20)地址:${checkForm.value.usdtAddr}`;
             }
             
             await toClipboard(msg,document.getElementsByClassName('copy')[0]);

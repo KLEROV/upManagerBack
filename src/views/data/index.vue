@@ -3,7 +3,22 @@
         <!--工具栏-->
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
             <div>
-          
+                <el-select
+                v-model="query.productLine"
+                clearable
+                size="small"
+                placeholder="产品线"
+                class="filter-item"
+                style="width: 90px"
+                @change="handleClick"
+                >
+                <el-option
+                    v-for="item in productLine"
+                    :key="item.key"
+                    :label="item.display_name"
+                    :value="item.key"
+                />
+                </el-select>
                 <el-date-picker v-model="query.totalDate" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" style='position:relative;top:-5px;'> </el-date-picker>
                 <el-button icon="el-icon-search" style='position:relative;top:-5px;' type="primary" @click='search'>搜索</el-button>
             </div>
@@ -13,14 +28,15 @@
             <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="selectionChangeHandler">
                 <el-table-column type="selection" width="55" />
                 <el-table-column prop="totalDate" label="统计时间"/>
-                <el-table-column prop="nickName" label="up昵称"></el-table-column>
-                <el-table-column prop="costAfter" label="扣量后">
+                <el-table-column prop="nickName" label="up昵称"/>
+                <el-table-column prop="videoText" label="视频标题"/>
+                <el-table-column prop="productLine" label="发布产品"/>
+                <el-table-column prop="costAfter" label="销售额">
                     <template slot-scope="scope">
                         <div>{{scope.row.costAfter?scope.row.costAfter:0}}</div>
                     </template>
-                    
                 </el-table-column>
-                <el-table-column prop="profitAfter" label="收益(分成后)">
+                <el-table-column prop="profitAfter" label="收益">
                     <template slot-scope="scope">
                         <div>{{scope.row.profitAfter?scope.row.profitAfter:0}}</div>
                     </template>
@@ -31,7 +47,6 @@
                         <div v-if='scope.row.costModel==2'>播放量</div>
                     </template>
                 </el-table-column>
-                
             </el-table>
             <!--分页组件-->
             <pagination />
@@ -75,9 +90,15 @@ export default {
       },
       rules: {
       },
+      productLine:[
+        { key: 'CL01', display_name: 'CL01' },
+        { key: 'CL02', display_name: 'CL02' },
+        { key: 'CL03', display_name: 'CL03' },
+        { key: 'CL04', display_name: 'CL04' },
+      ],
       enabledTypeOptions:[
-        { key: '1', display_name: '银行' },
-        { key: '2', display_name: 'USDT' },
+        { key: '1', display_name: '银行卡' },
+        { key: '2', display_name: 'USDT(TRC20)' },
       ],
       active:true,
       dialogModel:false,

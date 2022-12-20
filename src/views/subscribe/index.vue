@@ -110,8 +110,8 @@ export default {
       rules: {
       },
       enabledTypeOptions:[
-        { key: '1', display_name: '银行' },
-        { key: '2', display_name: 'USDT' },
+        { key: '1', display_name: '银行卡' },
+        { key: '2', display_name: 'USDT(TRC20)' },
       ],
       active:true,
       dialogModel:false,

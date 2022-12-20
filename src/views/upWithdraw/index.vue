@@ -43,7 +43,7 @@
                     <el-form-item label="提现方式" >
                         <el-radio-group v-model="dialogForm.takingMode">
                             <el-radio :label="1">银行卡</el-radio>
-                            <el-radio :label="2">USDT</el-radio>
+                            <el-radio :label="2">USDT(TRC20)</el-radio>
                         </el-radio-group>
                     </el-form-item>
                     <el-form-item label="提现金额">
@@ -64,7 +64,7 @@
                         </el-form-item>
                     </div>
                     
-                    <el-form-item label="USDT钱包地址" v-else>
+                    <el-form-item label="USDT(TRC20)钱包地址" v-else>
                         <el-input v-model="dialogForm.usdtAddr" style="width: 370px;" />
                     </el-form-item>
                 </el-form>
@@ -125,8 +125,8 @@ export default {
       rules: {
       },
       enabledTypeOptions:[
-        { key: '1', display_name: '银行' },
-        { key: '2', display_name: 'USDT' },
+        { key: '1', display_name: '银行卡' },
+        { key: '2', display_name: 'USDT(TRC20)' },
       ],
       active:true,
       dialogModel:false,
@@ -182,7 +182,7 @@ export default {
             delete this.dialogForm.usdtAddr;
         }else{
             if(this.dialogForm.usdtAddr==undefined||this.dialogForm.usdtAddr.replace(new RegExp(/( )/g),"")==''){
-                this.$message.error(`USDT钱包地址不能为空!!!`);
+                this.$message.error(`USDT(TRC20)钱包地址不能为空!!!`);
                 this.dialogLoading=false;
                 return false;
             }

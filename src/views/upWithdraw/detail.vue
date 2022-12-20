@@ -43,7 +43,7 @@
                     <el-form-item label="提现方式" >
                         <el-radio-group v-model="dialogForm.takingMode">
                             <el-radio :label="1">银行卡</el-radio>
-                            <el-radio :label="2">USDT</el-radio>
+                            <el-radio :label="2">USDT(TRC20)</el-radio>
                         </el-radio-group>
                     </el-form-item>
                     <el-form-item label="提现金额">
@@ -64,7 +64,7 @@
                         </el-form-item>
                     </div>
                     
-                    <el-form-item label="USDT钱包地址" v-else>
+                    <el-form-item label="USDT(TRC20)钱包地址" v-else>
                         <el-input v-model="dialogForm.usdtAddr" style="width: 370px;" />
                     </el-form-item>
                 </el-form>
@@ -79,9 +79,10 @@
                 <el-table-column prop="id" label="提现时间"/>
                 <el-table-column prop="id" label="提现ID"/>
                 <el-table-column prop="amount" label="提现总额(元)"></el-table-column>
-                <el-table-column prop="takingAmount" label="提现方式">
+                <el-table-column prop="takingMode" label="提现方式">
                     <template slot-scope="scope">
-                        <div>{{scope.row.takingMode==1?'银行卡':'USDT'}}</div>
+                        <div v-if='scope.row.takingMode==1'>银行卡</div>
+                        <div v-if='scope.row.takingMode==2'>USDT(TRC20)</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="totalAmount" label="状态">
@@ -135,8 +136,8 @@ export default {
       rules: {
       },
       enabledTypeOptions:[
-        { key: '1', display_name: '银行' },
-        { key: '2', display_name: 'USDT' },
+        { key: '1', display_name: '银行卡' },
+        { key: '2', display_name: 'USDT(TRC20)' },
       ],
       active:true,
       dialogModel:false,
@@ -192,7 +193,7 @@ export default {
             delete this.dialogForm.usdtAddr;
         }else{
             if(this.dialogForm.usdtAddr==undefined||this.dialogForm.usdtAddr.replace(new RegExp(/( )/g),"")==''){
-                this.$message.error(`USDT钱包地址不能为空!!!`);
+                this.$message.error(`USDT(TRC20)钱包地址不能为空!!!`);
                 this.dialogLoading=false;
                 return false;
             }

@@ -26,7 +26,7 @@
                 <el-table-column prop="id" label="id" />
                 <el-table-column prop="upId" label="upId" />
                 <el-table-column prop="nickName" label="昵称" />
-                <el-table-column prop="id" label="视频总数量(已发布)">暂无</el-table-column>
+        
                 <el-table-column prop="upId" label="视频数据(扣量后)">
                     <template slot-scope="scope">
                         <div>{{scope.row.costModel==1?'销售额':'播放量'}}:{{scope.row.costAfter}}</div>
