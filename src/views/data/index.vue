@@ -41,7 +41,7 @@
                         <div>{{scope.row.profitAfter?scope.row.profitAfter:0}}</div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="costModel" label="扣量模式">
+                <el-table-column prop="costModel" label="模式">
                     <template slot-scope="scope">
                         <div v-if='scope.row.costModel==1'>销售额</div>
                         <div v-if='scope.row.costModel==2'>播放量</div>

@@ -37,86 +37,32 @@
             <template>
                 <!-- <el-button  type="primary" size="small" @click='add'>查看</el-button> -->
                 <el-button  type="primary" size="medium" @click='add' :disabled='active==null'>新增</el-button>
+                <el-button  type="primary" size="medium" @click='syncSet' :disabled='activeSync==null'>同步</el-button>
             </template>
             <!--表单组件-->
-            
+            <el-dialog :close-on-click-modal="false" :visible.sync="productLineModel" title="同步" width="600px">
+                <el-form ref="form" :rules="rules" size="small" label-width="120px">
+                    <el-form-item label="平台">
+                        <el-checkbox-group v-model="productLineForm" @change="handleCheckedChange">
+                            <el-checkbox v-for='(item,index) in productLine' :label="item.key" :key='index'>{{item.key}}</el-checkbox>
+                        </el-checkbox-group>
+                        
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="text" @click="productLineModel=false">取消</el-button>
+                    <el-button :loading="productLineLoading" type="primary" @click="productLineSubmit">确认</el-button>
+                </div>
+
+            </el-dialog>
             <el-dialog :close-on-click-modal="false" :visible.sync="dialogModel" :title="dialogTitle" width="600px">
                 <el-form ref="form" :model="dialogForm" :rules="rules" size="small" label-width="120px">
-                    <!--<el-tabs v-model="activeName" @tab-click="handleClick">
-                        <el-tab-pane label="cl1" name="first">
-                            <el-form-item label="id">
-                                <el-input v-model="form.id" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="upId">
-                                <el-input v-model="form.upId" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="平台">
-                                <el-select v-model="form.productLine" placeholder="请选择平台">
-                                    <el-option label="cl1" value="cl1"></el-option>
-                                    <el-option label="cl2" value="cl2"></el-option>
-                                    <el-option label="cl3" value="cl3"></el-option>
-                                    <el-option label="cl4" value="cl4"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="模式">
-                                <el-select v-model="form.costModel" placeholder="请选择模式">
-                                    <el-option label="销售额(金币)" value="1"></el-option>
-                                    <el-option label="播放量" value="2"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="扣量">
-                                <el-input v-model="form.costs" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="单价">
-                                <el-input v-model="form.price" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="分成">
-                                <el-input v-model="form.divide" style="width: 370px;" />
-                            </el-form-item>
-                        </el-tab-pane>
-                        <el-tab-pane label="cl2" name="second">
-                             <el-form-item label="id">
-                                <el-input v-model="form.id" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="upId">
-                                <el-input v-model="form.upId" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="平台">
-                                <el-select v-model="form.productLine" placeholder="请选择平台">
-                                    <el-option label="cl1" value="1"></el-option>
-                                    <el-option label="cl2" value="2"></el-option>
-                                    <el-option label="cl3" value="3"></el-option>
-                                    <el-option label="cl4" value="4"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="模式">
-                                <el-select v-model="form.costModel" placeholder="请选择模式">
-                                    <el-option label="销售额(金币)" value="1"></el-option>
-                                    <el-option label="播放量" value="2"></el-option>
-                                </el-select>
-                            </el-form-item>
-                            <el-form-item label="扣量">
-                                <el-input v-model="form.costs" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="单价">
-                                <el-input v-model="form.price" style="width: 370px;" />
-                            </el-form-item>
-                            <el-form-item label="分成">
-                                <el-input v-model="form.divide" style="width: 370px;" />
-                            </el-form-item>
-                        </el-tab-pane>
-                        <el-tab-pane label="cl3" name="third">角色管理</el-tab-pane>
-                        <el-tab-pane label="cl4" name="fourth">定时任务补偿</el-tab-pane>
-                    </el-tabs> -->
                     <el-form-item label="upId" >
                         <el-input v-model="dialogForm.upId" style="width: 370px"/>
                     </el-form-item>
                     <el-form-item label="平台">
                         <el-select v-model="dialogForm.productLine" placeholder="请选择平台" @change='change'>
                             <el-option  v-for='(item,index) in productLine' :label="item.key" :value="item.key" :key='index'></el-option>
-                            <!-- <el-option label="cl2" value="2"></el-option>
-                            <el-option label="cl3" value="3"></el-option>
-                            <el-option label="cl4" value="4"></el-option> -->
                         </el-select>
                     </el-form-item>
                     <el-form-item label="模式">
@@ -143,7 +89,7 @@
             </el-dialog>
             <!--表格渲染-->
             <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="selectionChangeHandler">
-                <el-table-column type="selection" width="55" />
+                <el-table-column type="selection" width="55"/>
                 <!-- <el-table-column prop="id" label="id"  width="55"/> -->
                 <el-table-column prop="upId" label="upId"  width="55"/>
                 <el-table-column prop="headUrl" label="头像" width="150">
@@ -228,11 +174,15 @@ export default {
         { key: 'CL04', display_name: 'CL04' },
       ],
       active:null,
+      activeSync:null,
       dialogModel:false,
       dialogForm:{},
       dialogLoading:false,
       dialogTitle:'编辑',
-      baseData:null
+      baseData:null,
+      productLineModel:false,
+      productLineForm:[],
+      productLineLoading:false
     }
   },
   methods: {
@@ -324,12 +274,42 @@ export default {
         }else{
             this.active=null;
         }
+        this.activeSync=val;
     },
     add(){
         this.dialogTitle='添加';
         this.dialogForm={};
         this.dialogForm.upId=this.active.upId;
         this.dialogModel=true;
+    },
+    syncSet(){
+        this.productLineModel=true;
+        this.productLineForm=['CL01'];
+    },
+    productLineSubmit(){
+        this.productLineLoading=true;
+        if(this.productLineForm.length==0){
+            this.$message.error('请选择产品线!');
+            this.productLineLoading=false;
+            return false
+        }
+        let ids=[];
+        this.activeSync.map(item=>{
+            ids.push(item.upId);
+        })
+        crudupUser.syncData({upId:ids,productLine:this.productLineForm}).then(res=>{
+            this.$message.success('操作成功!');
+            this.crud.refresh();
+            this.productLineForm=[];
+            this.productLineModel=false;
+            this.productLineLoading=false;
+            this.activeSync=null;
+        }).catch(err=>{
+            this.$message.error(err);
+        })
+    },
+    handleCheckedChange(val){
+       
     }
   }
 }

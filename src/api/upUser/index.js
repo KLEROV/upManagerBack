@@ -30,4 +30,11 @@ export function del(data) {
       data
     })
   }
-export default { get, edit, add ,del}
+  export function syncData(data) {
+    return request({
+      url: 'api/UPUser/synUpInfo',
+      method: 'post',
+      data
+    })
+  }
+export default { get, edit, add ,del,syncData}
