@@ -248,6 +248,11 @@ export default {
             this.dialogLoading=false;
             return false
         }
+        if(!/^[0-9]+(\.[0-9]{1,2})?$/.test(this.dialogForm.price)){
+            this.$message.error('请正确输入单价!');
+            this.dialogLoading=false;
+            return false
+        }
         let fun=crudupUser.add;
         if(this.dialogTitle!='添加'){
             fun=crudupUser.edit;
