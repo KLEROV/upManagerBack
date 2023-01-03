@@ -28,7 +28,7 @@
                 <el-table-column prop="coins" label="金币数"/>
                 <el-table-column prop="productLine" label="产品线"/>
                 <el-table-column prop="createTime" label="创建时间" width="140"/>
-                <el-table-column prop="costs" label="扣量比">
+                <!-- <el-table-column prop="costs" label="扣量比">
                     <template slot-scope="scope">
                         <div>{{scope.row.costs?scope.row.costs:0}}</div>
                     </template>
@@ -64,7 +64,7 @@
                         <div v-if='scope.row.costModel==1'>销售额</div>
                         <div v-if='scope.row.costModel==2'>播放量</div>
                     </template>
-                </el-table-column>
+                </el-table-column> -->
                 
             </el-table>
             <!--分页组件-->
