@@ -36,4 +36,18 @@ export function del(data) {
       data
     })
   }
-export default { get, edit, add ,del,setStatus}
+  export function uploadPic(data) {
+    return request({
+      url: 'api/upTakingRecord/verify',
+      method: 'put',
+      data
+    })
+  }
+  export function getTotal(data) {
+    return request({
+      url: `api/upTakingRecord/queryTotalTaking?${data}`,
+      method: 'get',
+    })
+  }
+
+export default { get, edit, add ,del,setStatus,uploadPic,getTotal}

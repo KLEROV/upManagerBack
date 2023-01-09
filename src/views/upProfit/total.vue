@@ -43,6 +43,12 @@
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
             <!-- <crudOperation :permission="permission" /> -->
             <!--表单组件-->
+            <ul class='total'>
+                <li>平台收益:{{total.totalOwen?total.totalOwen:0}}</li>
+                <li>总收益:{{total.totalProfitBefore?total.totalProfitBefore:0}}</li>
+                <li>up主收益:{{total.totalProfitAfter?total.totalProfitAfter:0}}</li>
+            </ul>
+           
             <!--表格渲染-->
             <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
                 <el-table-column type="selection" width="55" />
@@ -131,9 +137,11 @@ export default {
         { key: '2', display_name: '已通过' },
         { key: '3', display_name: '已驳回' },
       ],
+      total:{}
     }
   },
   mounted(){
+    this.getTotal('page=0&size=10&sort=total_date%2Cdesc');
     
   },
   methods: {
@@ -149,7 +157,7 @@ export default {
       return true
     },
     timeModel(val){
-        const month=[['Jan',1],['Feb',2],['Mar',3],['Apr',4],['May',5],['Jun',6],['Jul',7],['Aug',8],['Sep',9],['Oct',10],['Nov',11],['Dec',12]];
+        const month=[['Jan','01'],['Feb','02'],['Mar','03'],['Apr','04'],['May','05'],['Jun','06'],['Jul','07'],['Aug','8'],['Sep','09'],['Oct',10],['Nov',11],['Dec',12]];
         let time=val;
         time=time.slice(0,time.indexOf('00:00:00')-1).replace(new RegExp(/( )/g),',');
         const monthGet=month.find(item=>time.indexOf(item[0])>0);
@@ -157,15 +165,29 @@ export default {
         return `${time[3]}-${time[1]}-${time[2]}`;
     },
     search(){
-        
         if(this.crud.query.totalDate){
-            this.crud.query.startTime=this.timeModel(this.crud.query.totalDate[0].toString())
-            this.crud.query.endTime=this.timeModel(this.crud.query.totalDate[1].toString())
+            this.crud.query.startTime=this.timeModel(this.crud.query.totalDate[0].toString());
+            this.crud.query.endTime=this.timeModel(this.crud.query.totalDate[1].toString());
+            // delete this.crud.query.totalDate;
+        }else{
+            this.crud.query.startTime='';
+            this.crud.query.endTime='';
         }
+        let param=`page=0&size=10&sort=total_date%2Cdesc&upId=${this.crud.query.upId==undefined?'':this.crud.query.upId}&&costModel=${this.crud.query.costModel==undefined?'':this.crud.query.costModel}&startTime=${this.crud.query.startTime==undefined?'':this.crud.query.startTime}&endTime=${this.crud.query.endTime==undefined?'':this.crud.query.endTime}`
+        this.getTotal(param);
         this.crud.toQuery();
     },
     handleClick(tab, event){
         console.log(tab, event);
+    },
+    getTotal(param){
+        
+        crudupUser.getTotal(param).then(res=>{
+            console.log(param)
+        this.total=res;
+    }).catch(err=>{
+
+    })
     }
   }
 }
@@ -183,5 +205,14 @@ export default {
     }
     .fail{
         color:red;
+    }
+    .total{
+        overflow: hidden;
+        padding: 0;
+    }
+    .total li{
+        float: left;
+        list-style: none;
+        margin-right:20px;
     }
 </style>

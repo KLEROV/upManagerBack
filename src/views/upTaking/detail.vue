@@ -5,6 +5,7 @@
         <div class="head-container">
           
             <!-- 搜索 -->
+            <div>
             <el-input
               v-model="query.upId"
               clearable
@@ -56,8 +57,11 @@
                 :value="item.key"
               />
             </el-select>
-            <rrOperation />
-            
+            <el-button icon="el-icon-search" style='position:relative;top:-5px;' type="primary" @click='search'>搜索</el-button>
+            </div>
+            <ul class='total'>
+                <li>提现总计:{{total.totalAmount?total.totalAmount:0}}</li>
+            </ul>
             <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
             <!-- <crudOperation :permission="permission" /> -->
             <!--表单组件-->
@@ -144,6 +148,21 @@
                     <el-button :loading="dialogLoading" type="primary" @click="submit"  v-else>提交</el-button>
                 </div>
             </el-dialog>
+            <el-dialog :close-on-click-modal="false" :visible.sync="sureModel" title="通过" width="600px">
+                <el-form ref="form" :rules="rules" size="small" label-width="120px">
+                    <el-form-item label="凭证">
+                        <el-upload class="avatar-uploader" action="https://yany.info/web/api/upTakingRecord/uploadProof"
+                        :show-file-list="false" :headers="{Authorization:token}" :on-success="handleAvatarSuccess" name='proof'>
+                        <img v-if="sureForm" :src="sureForm" class="avatar"/>
+                        <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+                        </el-upload>
+                    </el-form-item>
+                </el-form>
+                <div slot="footer" class="dialog-footer">
+                    <el-button type="text" @click="sureModel=false">取消</el-button>
+                    <el-button :loading="dialogLoading" type="primary" @click="sureSubmit">提交</el-button>
+                </div>
+            </el-dialog>
         </div>
     </div>
 </template>
@@ -157,6 +176,7 @@ import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
 import useClipboard from 'vue-clipboard3';
+import { getToken } from '@/utils/auth'
 const { toClipboard } = useClipboard();
 const defaultForm = {upId:3}
 export default {
@@ -203,11 +223,16 @@ export default {
       dialogForm:{},
       dialogLoading:false,
       dialogTitle:'编辑',
-      passStatus:false
+      passStatus:false,
+      sureModel:false,
+      sureForm:'',
+      token:'',
+      total:{}
     }
   },
   mounted(){
-    
+    this.token=getToken();
+    this.getTotal('page=0&size=10&sort=total_date%2Cdesc');
   },
   methods: {
     // 钩子：在获取表格数据之前执行，false 则代表不获取数据
@@ -223,24 +248,27 @@ export default {
     check(value,status){
         this.dialogForm={...value};
         if(status==1){
-            this.$confirm(`确认通过选中的数据提现?`, '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(() => {
-                this.dialogForm.verifyState=1;
-                upTaking.setStatus(this.dialogForm).then(res=>{
-                    this.$message.success('操作成功!');
-                    this.crud.refresh();
-                }).catch(err=>{
-                    this.$message.error(err);
-                })
-            }).catch(() => {
+            // this.$confirm(`确认通过选中的数据提现?`, '提示', {
+            //     confirmButtonText: '确定',
+            //     cancelButtonText: '取消',
+            //     type: 'warning'
+            // }).then(() => {
+            //     this.dialogForm.verifyState=1;
+            //     upTaking.setStatus(this.dialogForm).then(res=>{
+            //         this.$message.success('操作成功!');
+            //         this.crud.refresh();
+            //     }).catch(err=>{
+            //         this.$message.error(err);
+            //     })
+            // }).catch(() => {
 
-            })
+            // })
+         
+            this.sureModel=true;
+            this.sureForm='';
         }else{
             this.dialogTitle='驳回';
-            this.dialogModel=true;
+            this.sureModel=true;
             this.passStatus=false;
         }
         
@@ -297,7 +325,72 @@ export default {
     },
     handleClick(tab, event){
         console.log(tab, event);
-    }
+    },
+    sureSubmit(){//通过提交
+        this.dialogLoading=true;
+        if(!this.sureForm){
+            this.$message.error('凭证不能为空!');
+            this.dialogLoading=false;
+            return false;
+        }
+        this.dialogForm.verifyState=1;
+        this.dialogForm.proof=this.sureForm;
+        upTaking.setStatus(this.dialogForm).then(res=>{
+            this.$message.success('操作成功!');
+            this.sureModel=false;
+            this.sureForm='';
+            this.crud.refresh();
+            this.dialogLoading=false;
+        }).catch(err=>{
+            this.$message.error(err);
+            this.dialogLoading=false;
+        })
+    },
+    handleAvatarSuccess(res, file) {
+        this.sureForm = URL.createObjectURL(file.raw);
+        this.$message.success('上传成功!');
+      },
+    getTotal(param){
+        upTaking.getTotal(param).then(res=>{
+            this.total=res;
+        }).catch(err=>{
+
+        })
+    },
+    timeModel(val){
+        const month=[['Jan',1],['Feb',2],['Mar',3],['Apr',4],['May',5],['Jun',6],['Jul',7],['Aug',8],['Sep',9],['Oct',10],['Nov',11],['Dec',12]];
+        let time=val;
+        time=time.slice(0,time.indexOf('00:00:00')-1).replace(new RegExp(/( )/g),',');
+        const monthGet=month.find(item=>time.indexOf(item[0])>0);
+        time=time.replace(monthGet[0],monthGet[1]).split(',');
+        return `${time[3]}-${time[1]}-${time[2]}`;
+    },
+    search(){
+        if(this.crud.query.totalDate){
+            this.crud.query.startTime=this.timeModel(this.crud.query.totalDate[0].toString())
+            this.crud.query.endTime=this.timeModel(this.crud.query.totalDate[1].toString())
+            
+        }else{
+            this.crud.query.startTime='';
+            this.crud.query.endTime='';
+        }
+        let param=`page=0&size=10&sort=total_date%2Cdesc&upId=${this.crud.query.upId==undefined?'':this.crud.query.upId}&&id=${this.crud.query.id==undefined?'':this.crud.query.id}&verifyState=${this.crud.query.verifyState==undefined?'':this.crud.query.verifyState}&verifyState=${this.crud.query.verifyState==undefined?'':this.crud.query.verifyState}$verifyState=${this.crud.query.verifyState==undefined?'':this.crud.query.verifyState}$takingMode=${this.crud.query.takingMode==undefined?'':this.crud.query.takingMode}`
+        this.getTotal(param);
+        this.crud.toQuery();
+    },
+    // beforeAvatarUpload(file) {
+    //     const isJPG = file.type === 'image/jpeg';
+    //     const isLt2M = file.size / 1024 / 1024 < 2;
+
+    //     if (!isJPG) {
+    //       this.$message.error('上传头像图片只能是 JPG 格式!');
+    //     }
+    //     if (!isLt2M) {
+    //       this.$message.error('上传头像图片大小不能超过 2MB!');
+    //     }
+    //     return isJPG && isLt2M;
+    //   }
+    // }
   }
 }
 </script>
@@ -318,5 +411,41 @@ export default {
     .border{
         border:1px solid black;
         padding-left:10px;
+    }
+    .el-upload{
+        border:1px solid black;
+    }
+    .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+    border:1px solid black;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+  }
+  .total{
+        overflow: hidden;
+        padding: 0;
+    }
+    .total li{
+        float: left;
+        list-style: none;
+        margin-right:20px;
     }
 </style>
