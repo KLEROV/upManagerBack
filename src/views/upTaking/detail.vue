@@ -78,6 +78,11 @@
                         <div>{{scope.row.takingMode==1?scope.row.bankCard:scope.row.usdtAddr}}</div>
                     </template>
                 </el-table-column>
+                <el-table-column prop="proof" label="打款凭证">
+                    <template slot-scope="scope"> 
+                        <img :src="scope.row.proof" style='width:100%;'/>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="takingMode" label="提现方式">
                     <template slot-scope="scope">
                         <div v-if='scope.row.takingMode==1'>银行卡</div>
@@ -95,7 +100,7 @@
                     <template slot-scope="scope">
                         <el-button type="text" size="small" @click='detail(scope.row)'>详情</el-button>
                         <el-button type="text" size="small" @click='check(scope.row,1)' v-if='scope.row.verifyState==0'>通过</el-button>
-                        <el-button type="text" size="small" @click='check(scope.row,2)'>驳回</el-button>
+                        <el-button type="text" size="small" @click='check(scope.row,2)' v-if='scope.row.verifyState==0'>驳回</el-button>
                         <!-- <el-button type="text" size="small" @click='check(scope.row,1)'>通过</el-button>
                         <el-button type="text" size="small" @click='check(scope.row,2)'>驳回</el-button> -->
                     </template>
@@ -268,7 +273,7 @@ export default {
             this.sureForm='';
         }else{
             this.dialogTitle='驳回';
-            this.sureModel=true;
+            this.dialogModel=true;;
             this.passStatus=false;
         }
         
