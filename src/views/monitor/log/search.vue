@@ -8,6 +8,14 @@
       style="width: 200px;"
       class="filter-item"
     />
+    <el-input
+      v-model="query.username"
+      clearable
+      size="small"
+      placeholder="请输入用户名"
+      style="width: 200px;"
+      class="filter-item"
+    />
     <date-range-picker v-model="query.createTime" class="date-item" />
     <rrOperation />
   </div>

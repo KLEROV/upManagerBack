@@ -96,6 +96,8 @@
                         <div v-if='scope.row.verifyState==2'>{{scope.row.verifyState==2?'驳回':''}}:{{scope.row.remark}}</div>
                     </template>
                 </el-table-column>
+                <el-table-column prop="createTime" label="提现时间" />
+                <el-table-column prop="verifyTime" label="打款时间" />
                 <el-table-column fixed="right" label="操作" width="140">
                     <template slot-scope="scope">
                         <el-button type="text" size="small" @click='detail(scope.row)'>详情</el-button>
@@ -339,7 +341,6 @@ export default {
             return false;
         }
         this.dialogForm.verifyState=1;
-        this.dialogForm.proof=this.sureForm;
         upTaking.setStatus(this.dialogForm).then(res=>{
             this.$message.success('操作成功!');
             this.sureModel=false;
@@ -353,6 +354,7 @@ export default {
     },
     handleAvatarSuccess(res, file) {
         this.sureForm = URL.createObjectURL(file.raw);
+        this.dialogForm.proof=res.proof;
         this.$message.success('上传成功!');
       },
     getTotal(param){
