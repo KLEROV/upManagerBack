@@ -76,7 +76,7 @@
             <!--表格渲染-->
             <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="selectionChangeHandler">
                 <el-table-column type="selection" width="55" />
-                <el-table-column prop="id" label="提现时间"/>
+                
                 <el-table-column prop="id" label="提现ID"/>
                 <el-table-column prop="amount" label="提现总额(元)"></el-table-column>
                 <el-table-column prop="takingMode" label="提现方式">
@@ -92,6 +92,7 @@
                         <div v-if='scope.row.verifyState==2'>{{scope.row.verifyState==2?'驳回':''}}:{{scope.row.remark}}</div>
                     </template>
                 </el-table-column>
+                <el-table-column prop="createTime" label="提现时间"/>
             </el-table>
             <!--分页组件-->
             <pagination />

@@ -73,6 +73,7 @@
                 </el-table-column>
                 <el-table-column prop="bankUser" label="昵称" />
                 <el-table-column prop="amount" label="提现金额（元）" />
+                <el-table-column prop="currentBalance" label="余额（元）" />
                 <el-table-column prop="bankCard" label="提现账号">
                     <template slot-scope="scope">
                         <div>{{scope.row.takingMode==1?scope.row.bankCard:scope.row.usdtAddr}}</div>
