@@ -61,7 +61,7 @@
                 <el-table-column prop="upId" label="upId" />
                 <el-table-column prop="cover" label="封面">
                     <template slot-scope="scope">
-                        <img :src="scope.row.cover" style='width:100%'/>
+                        <img :src="scope.row.cover.replace('https://yany.info','http://13.215.47.73')" style='width:100%'/>
                     </template>
                 </el-table-column>
                 <el-table-column prop="cover" label="时长">
