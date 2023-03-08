@@ -81,7 +81,7 @@
                 </el-table-column>
                 <el-table-column prop="proof" label="打款凭证">
                     <template slot-scope="scope"> 
-                        <img :src="scope.row.proof.replace('https://yany.info','http://13.215.47.73')" style='width:100%;' v-if='scope.row.proof'/>
+                        <img :src="scope.row.proof?scope.row.proof.replace('https://yany.info','http://13.215.47.73'):''" style='width:100%;' v-if='scope.row.proof'/>
                         <div v-else></div>
                     </template>
                 </el-table-column>
