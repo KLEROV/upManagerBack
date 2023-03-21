@@ -81,7 +81,7 @@
                 </el-table-column>
                 <el-table-column prop="proof" label="打款凭证">
                     <template slot-scope="scope"> 
-                        <img :src="scope.row.proof?scope.row.proof.replace('https://yany.info','http://13.215.47.73'):''" style='width:100%;' v-if='scope.row.proof'/>
+                        <img :src="scope.row.proof?scope.row.proof.replace('https://yany.info','http://18.163.188.47'):''" style='width:100%;' v-if='scope.row.proof'/>
                         <div v-else></div>
                     </template>
                 </el-table-column>
@@ -160,7 +160,7 @@
             <el-dialog :close-on-click-modal="false" :visible.sync="sureModel" title="通过" width="600px">
                 <el-form ref="form" :rules="rules" size="small" label-width="120px">
                     <el-form-item label="凭证">
-                        <el-upload class="avatar-uploader" action="http://13.215.47.73/web/api/upTakingRecord/uploadProof"
+                        <el-upload class="avatar-uploader" action="http://18.163.188.47/web/api/upTakingRecord/uploadProof"
                         :show-file-list="false" :headers="{Authorization:token}" :on-success="handleAvatarSuccess" name='proof'>
                         <img v-if="sureForm" :src="sureForm" class="avatar"/>
                         <i v-else class="el-icon-plus avatar-uploader-icon"></i>

@@ -44,7 +44,7 @@
                     
                     <!-- <label style='color:red'>每次文件上传后请删除队列中的视频后再次上传</label>  -->
                    </div>
-                    <video :src="dialogForm.videoUrl.replace('https://yany.info','http://13.215.47.73')" :controls='true' width='100%' v-else/>
+                    <video :src="dialogForm.videoUrl.replace('https://yany.info','http://18.163.188.47')" :controls='true' width='100%' v-else/>
                     
                 </el-form>
                 <div slot="footer" class="dialog-footer">
@@ -61,7 +61,7 @@
                 <el-table-column prop="upId" label="upId" />
                 <el-table-column prop="cover" label="封面">
                     <template slot-scope="scope">
-                        <img :src="scope.row.cover?scope.row.cover.replace('https://yany.info','http://13.215.47.73'):''" style='width:100%'/>
+                        <img :src="scope.row.cover?scope.row.cover.replace('https://yany.info','http://18.163.188.47'):''" style='width:100%'/>
                     </template>
                 </el-table-column>
                 <el-table-column prop="cover" label="时长">

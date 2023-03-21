@@ -61,7 +61,7 @@
               </el-form>
             </el-tab-pane>
             <!--    操作日志    -->
-            <el-tab-pane label="操作日志" name="second">
+            <!-- <el-tab-pane label="操作日志" name="second">
               <el-table v-loading="loading" :data="data" style="width: 100%;">
                 <el-table-column prop="description" label="行为" />
                 <el-table-column prop="requestIp" label="IP" />
@@ -85,7 +85,7 @@
                   </template>
                 </el-table-column>
               </el-table>
-              <!--分页组件-->
+            
               <el-pagination
                 :total="total"
                 :current-page="page + 1"
@@ -94,7 +94,7 @@
                 @size-change="sizeChange"
                 @current-change="pageChange"
               />
-            </el-tab-pane>
+            </el-tab-pane> -->
           </el-tabs>
         </el-card>
       </el-col>
